@@ -1,125 +1,165 @@
-import 'package:flutter/material.dart';
+import 'dart:math';
 
-void main() {
-  runApp(const MyApp());
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:gana/splash_screen.dart';
+import 'package:hydrated_bloc/hydrated_bloc.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:workmanager/workmanager.dart';
+import 'core/unit/color/colors.dart';
+import 'notification_service.dart';
+
+import 'Form/presentation/bloc/user_form_cubit.dart';
+import 'Form/presentation/pages/form_screen.dart';
+import 'core/service/notifcation.dart';
+import 'home/home_screen.dart';
+import 'home/logic/diagram/chart_cubit.dart';
+import 'home/logic/expand/expand.dart';
+import 'home/logic/math/counter_math_cubit.dart';
+import 'home/logic/progress/increment_cubit.dart';
+import 'home/logic/switch/switch_cubit.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    final storageDirectory = await getApplicationDocumentsDirectory();
+    HydratedBloc.storage = await HydratedStorage.build(
+      storageDirectory: storageDirectory,
+    );
+  } catch (e) {
+    HydratedBloc.storage = await HydratedStorage.build(
+      storageDirectory: await getTemporaryDirectory(),
+    );
+  }
+
+  await initializeNotifications();
+  Workmanager().initialize(
+    callbackDispatcher,
+    isInDebugMode: false,
+  );
+  await scheduleDailyNotificationTask();
+  final prefs = await SharedPreferences.getInstance();
+  final isFormCompleted = prefs.getBool('isFormCompleted') ?? false;
+
+  runApp(MyApp(isFormCompleted: isFormCompleted));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool isFormCompleted;
+  const MyApp({super.key, required this.isFormCompleted});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => UserFormCubit(),
+        ),
+        BlocProvider(
+          create: (context) => DailyGoalCubit(),
+        ),
+        BlocProvider(
+          create: (context) => CounterCubit(),
+        ),
+        BlocProvider(
+          create: (context) => ExpandCubit(),
+        ),
+        BlocProvider(
+          create: (context) => IncrementChartCubit(),
+        ),
+        BlocProvider(
+          create: (context) => SwitchCubit(),
+        ),
+
+        // Add more blocs as needed
+      ],
+      child: BlocBuilder<SwitchCubit, SwitchState>(
+        builder: (context, state) {
+          return MaterialApp(
+            title: 'غرسك',
+            theme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+              useMaterial3: true,
+              fontFamily: 'CustomFont1',
+              textTheme:  const TextTheme(
+               bodyLarge: TextStyle(color: AppColors.fontPrimary, fontFamily: 'CustomFont1'),
+                bodyMedium: TextStyle(color: AppColors.fontPrimary, fontFamily: 'CustomFont1'),
+                bodySmall: TextStyle(color: AppColors.fontPrimary, fontFamily: 'CustomFont1'),
+                displayLarge: TextStyle(color: AppColors.fontPrimary, fontFamily: 'CustomFont2'),
+                displayMedium: TextStyle(color: AppColors.fontPrimary, fontFamily: 'CustomFont2'),
+                displaySmall: TextStyle(color: AppColors.fontPrimary, fontFamily: 'CustomFont2'),
+                headlineLarge: TextStyle(color: AppColors.fontPrimary, fontFamily: 'CustomFont2'),
+                headlineMedium: TextStyle(color: AppColors.fontPrimary, fontFamily: 'CustomFont2'),
+                headlineSmall: TextStyle(color: AppColors.fontPrimary, fontFamily: 'CustomFont2'),
+                titleLarge: TextStyle(color: AppColors.fontPrimary, fontFamily: 'CustomFont2'),
+                titleMedium: TextStyle(color: AppColors.fontPrimary, fontFamily: 'CustomFont2'),
+                titleSmall: TextStyle(color: AppColors.fontPrimary, fontFamily: 'CustomFont2'),
+                labelLarge: TextStyle(color: AppColors.fontPrimary, fontFamily: 'CustomFont2'),
+                labelMedium: TextStyle(color: AppColors.fontPrimary, fontFamily: 'CustomFont2'),
+                labelSmall: TextStyle(color: AppColors.fontPrimary, fontFamily: 'CustomFont2'),
+              ),
+            ),
+            darkTheme: ThemeData(
+              brightness: Brightness.dark,
+              useMaterial3: true,
+              fontFamily: 'CustomFont1',
+              textTheme:  const TextTheme(
+              bodyLarge: TextStyle(color: Colors.white, fontFamily: 'CustomFont1'),
+                bodyMedium: TextStyle(color: Colors.white, fontFamily: 'CustomFont1'),
+                bodySmall: TextStyle(color: Colors.white, fontFamily: 'CustomFont1'),
+                displayLarge: TextStyle(color: Colors.white, fontFamily: 'CustomFont2'),
+                displayMedium: TextStyle(color: Colors.white, fontFamily: 'CustomFont2'),
+                displaySmall: TextStyle(color: Colors.white, fontFamily: 'CustomFont2'),
+                headlineLarge: TextStyle(color: Colors.white, fontFamily: 'CustomFont2'),
+                headlineMedium: TextStyle(color: Colors.white, fontFamily: 'CustomFont2'),
+                headlineSmall: TextStyle(color: Colors.white, fontFamily: 'CustomFont2'),
+                titleLarge: TextStyle(color: Colors.white, fontFamily: 'CustomFont2'),
+                titleMedium: TextStyle(color: Colors.white, fontFamily: 'CustomFont2'),
+                titleSmall: TextStyle(color: Colors.white, fontFamily: 'CustomFont2'),
+                labelLarge: TextStyle(color: Colors.white, fontFamily: 'CustomFont2'),
+                labelMedium: TextStyle(color: Colors.white, fontFamily: 'CustomFont2'),
+                labelSmall: TextStyle(color: Colors.white, fontFamily: 'CustomFont2'),
+
+              ),
+              // Customize dark theme color scheme if desired
+            ),
+            themeMode: state.darkModeEnabled ? ThemeMode.dark : ThemeMode.light,
+            home: SplashWrapper(isFormCompleted: isFormCompleted),
+            // home: isFormCompleted ?const HomeScreen() :const PlantingFormScreen(),
+          );
+        },
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
+
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class SplashWrapper extends StatefulWidget {
+  final bool isFormCompleted;
+  const SplashWrapper({super.key, required this.isFormCompleted});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<SplashWrapper> createState() => _SplashWrapperState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+class _SplashWrapperState extends State<SplashWrapper> {
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(seconds: 2), () {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => widget.isFormCompleted ? HomeScreen() : PlantingFormScreen(),
+        ),
+      );
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
+    return const SplashScreen();
   }
 }

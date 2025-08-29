@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "garthapp" "\0"
+            VALUE "CompanyName", "com.ghars" "\0"
+            VALUE "FileDescription", "gana" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "garthapp" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2025 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "garthapp.exe" "\0"
-            VALUE "ProductName", "garthapp" "\0"
+            VALUE "InternalName", "gana" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2025 com.ghars. All rights reserved." "\0"
+            VALUE "OriginalFilename", "gana.exe" "\0"
+            VALUE "ProductName", "gana" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

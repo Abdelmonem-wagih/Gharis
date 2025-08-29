@@ -1,0 +1,2 @@
+C:/Users/HP/AndroidStudioProjects/GarthApp/android/app/.cxx/RelWithDebInfo/154u2s34/x86/CMakeFiles/edit_cache.dir
+C:/Users/HP/AndroidStudioProjects/GarthApp/android/app/.cxx/RelWithDebInfo/154u2s34/x86/CMakeFiles/rebuild_cache.dir

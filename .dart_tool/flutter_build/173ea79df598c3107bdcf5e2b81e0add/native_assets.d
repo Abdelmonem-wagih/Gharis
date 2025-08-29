@@ -1,0 +1,1 @@
+ /Users/gogo/StudioProjects/wagih/GarthApp/.dart_tool/flutter_build/173ea79df598c3107bdcf5e2b81e0add/native_assets.yaml: 
