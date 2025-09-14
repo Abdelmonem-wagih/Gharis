@@ -30,10 +30,10 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 
 Future<void> initializeNotifications() async {
   const AndroidInitializationSettings initializationSettingsAndroid =
-  AndroidInitializationSettings('@mipmap/ic_launcher');
+      AndroidInitializationSettings('@mipmap/ic_launcher');
 
   const DarwinInitializationSettings initializationSettingsIOS =
-  DarwinInitializationSettings(
+      DarwinInitializationSettings(
     requestAlertPermission: true,
     requestBadgePermission: true,
     requestSoundPermission: true,
@@ -41,12 +41,11 @@ Future<void> initializeNotifications() async {
 
   const InitializationSettings initializationSettings = InitializationSettings(
     android: initializationSettingsAndroid,
-    iOS: initializationSettingsIOS, // 👈 this was missing
+    iOS: initializationSettingsIOS,
   );
 
   await flutterLocalNotificationsPlugin.initialize(initializationSettings);
 }
-
 
 Future<void> showRandomNotification() async {
   final random = Random();
@@ -61,8 +60,20 @@ Future<void> showRandomNotification() async {
     priority: Priority.high,
     ticker: 'ticker',
   );
+
+  const DarwinNotificationDetails iosPlatformChannelSpecifics =
+      DarwinNotificationDetails(
+    presentAlert: true,
+    presentBadge: true,
+    presentSound: true,
+  );
+
   const NotificationDetails platformChannelSpecifics =
-      NotificationDetails(android: androidPlatformChannelSpecifics);
+      NotificationDetails(
+        android: androidPlatformChannelSpecifics,
+        iOS: iosPlatformChannelSpecifics,
+      );
+
   await flutterLocalNotificationsPlugin.show(
     0,
     'غرس الجنة',
@@ -90,12 +101,11 @@ Future<void> requestIOSPermissions() async {
   );
 }
 
-Future<void> requestNotificationsPermission() {
-  return flutterLocalNotificationsPlugin
-          .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>()
-          ?.requestNotificationsPermission() ??
-      Future.value();
+Future<void> requestNotificationsPermission() async {
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+      AndroidFlutterLocalNotificationsPlugin>()
+      ?.requestNotificationsPermission();
 }
 
 Future<void> cancelAllNotifications() async {
@@ -112,8 +122,20 @@ Future<void> showNotification(int count, String name) async {
     priority: Priority.high,
     showWhen: false,
   );
+
+  const DarwinNotificationDetails iosPlatformChannelSpecifics =
+      DarwinNotificationDetails(
+    presentAlert: true,
+    presentBadge: true,
+    presentSound: true,
+  );
+
   const NotificationDetails platformChannelSpecifics =
-      NotificationDetails(android: androidPlatformChannelSpecifics);
+      NotificationDetails(
+        android: androidPlatformChannelSpecifics,
+        iOS: iosPlatformChannelSpecifics,
+      );
+
   await flutterLocalNotificationsPlugin.show(
     0,
     '🎉 تهانينا!',

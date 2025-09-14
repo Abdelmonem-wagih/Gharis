@@ -36,6 +36,11 @@ void main() async {
   }
 
   await initializeNotifications();
+
+  // Request notification permissions for both platforms
+  await requestNotificationsPermission(); // Android
+  await requestIOSPermissions(); // iOS
+
   Workmanager().initialize(
     callbackDispatcher,
     isInDebugMode: false,

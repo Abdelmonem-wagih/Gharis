@@ -46,5 +46,12 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>background-processing</string>
+		<string>background-fetch</string>
+	</array>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>This app needs notification permission to send you daily reminders for dhikr (remembrance of Allah).</string>
 </dict>
 </plist>
