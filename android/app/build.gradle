@@ -28,18 +28,23 @@ def keystoreProperties = new Properties()
     }
 android {
     namespace "com.ghars.gana"
-    compileSdk 34
-    ndkVersion flutter.ndkVersion
+    compileSdk 35
+    ndkVersion "26.1.10909125"
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+        coreLibraryDesugaringEnabled true
     }
 
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '17'
     }
 
+// ✅ هذا هو السطر المهم لحل تعارض JVM
+    kotlin {
+        jvmToolchain(17)
+    }
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
     }
@@ -49,10 +54,13 @@ android {
         applicationId "com.ghars.gana"//com.ghars.gana
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
-        minSdkVersion 21
-        targetSdkVersion 34
+        minSdkVersion 25
+        targetSdkVersion 35
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
+    }
+    buildFeatures {
+        buildConfig true
     }
 
     signingConfigs {
@@ -82,7 +90,10 @@ flutter {
     source '../..'
 }
 
-dependencies {}
+dependencies {
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
+
+}
 
 // Add this block at the end of the file (outside dependencies)
 configurations.all {
