@@ -139,7 +139,7 @@ Future<void> showNotification(int count, String name) async {
   await flutterLocalNotificationsPlugin.show(
     0,
     '🎉 تهانينا!',
-    'لقد غرست اليوم $count $name في الجن استمر في هذا الخير مع غرس الجنة وزد رصيدك في الآخرة.',
+    'لقد غرست اليوم $count $name في الجنة استمر في هذا الخير مع غرس الجنة وزد رصيدك في الآخرة.',
     platformChannelSpecifics,
     payload: 'item x',
   );
