@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -38,13 +39,24 @@ void main() async {
   await initializeNotifications();
 
   // Request notification permissions for both platforms
-  await requestNotificationsPermission(); // Android
-  await requestIOSPermissions(); // iOS
+// Request permissions
+  await requestNotificationsPermission(); // Android permission helper
+  await requestIOSPermissions(); // iOS permission helper
 
-  Workmanager().initialize(
-    callbackDispatcher,
-    isInDebugMode: false,
-  );
+  // Initialize Workmanager only on Android
+  if (Platform.isAndroid) {
+    Workmanager().initialize(
+      callbackDispatcher,
+      isInDebugMode: true, // false in prod
+    );
+
+    // register periodic task only on Android
+    await scheduleDailyNotificationTask();
+  } else {
+    // On iOS: schedule local notification via the plugin (no background isolate)
+    // You can schedule daily local notifications here. Example:
+    await scheduleDailyNotificationsForIOS(); // implement in notification_service.dart
+  }
   await scheduleDailyNotificationTask();
   final prefs = await SharedPreferences.getInstance();
   final isFormCompleted = prefs.getBool('isFormCompleted') ?? false;

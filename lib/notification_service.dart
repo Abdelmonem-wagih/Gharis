@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:workmanager/workmanager.dart';
@@ -28,24 +29,31 @@ final List<String> notificationMessages = [
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
+
 Future<void> initializeNotifications() async {
-  const AndroidInitializationSettings initializationSettingsAndroid =
-      AndroidInitializationSettings('@mipmap/ic_launcher');
+  try {
+    const AndroidInitializationSettings initializationSettingsAndroid =
+    AndroidInitializationSettings('@mipmap/ic_launcher');
 
-  const DarwinInitializationSettings initializationSettingsIOS =
-      DarwinInitializationSettings(
-    requestAlertPermission: true,
-    requestBadgePermission: true,
-    requestSoundPermission: true,
-  );
+    const DarwinInitializationSettings initializationSettingsIOS =
+    DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+    );
 
-  const InitializationSettings initializationSettings = InitializationSettings(
-    android: initializationSettingsAndroid,
-    iOS: initializationSettingsIOS,
-  );
+    const InitializationSettings initializationSettings = InitializationSettings(
+      android: initializationSettingsAndroid,
+      iOS: initializationSettingsIOS,
+    );
 
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  } catch (e) {
+    // handle error (plugin not available in background, etc.)
+    print('initializeNotifications error: $e');
+  }
 }
+
 
 Future<void> showRandomNotification() async {
   final random = Random();
@@ -74,21 +82,38 @@ Future<void> showRandomNotification() async {
         iOS: iosPlatformChannelSpecifics,
       );
 
-  await flutterLocalNotificationsPlugin.show(
-    0,
-    'غرس الجنة',
-    message,
-    platformChannelSpecifics,
-  );
+  try {
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      'غرس الجنة',
+      message,
+      platformChannelSpecifics,
+    );
+  } catch (e) {
+    print('showRandomNotification error: $e');
+  }
 }
 
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
-    await initializeNotifications();
-    await showRandomNotification();
+    // IMPORTANT: Do not try to run flutter plugins on iOS background isolate
+    if (Platform.isIOS) {
+      print('Workmanager background task ignored on iOS.');
+      return Future.value(false);
+    }
+
+    // Android: initialize plugin in this background isolate and show notification
+    try {
+      await initializeNotifications();
+      await showRandomNotification();
+    } catch (e) {
+      print('Background task failed: $e');
+      return Future.value(false);
+    }
     return Future.value(true);
   });
 }
+
 
 Future<void> requestIOSPermissions() async {
   await flutterLocalNotificationsPlugin
@@ -158,4 +183,47 @@ Future<void> scheduleDailyNotificationTask() async {
       requiresStorageNotLow: false,
     ),
   );
+}
+
+/// iOS: schedule periodic notification using plugin (no background isolate)
+Future<void> scheduleDailyNotificationsForIOS() async {
+  if (Platform.isIOS) {
+    try {
+      const AndroidNotificationDetails androidPlatformChannelSpecifics =
+      AndroidNotificationDetails(
+        'daily_channel_id',
+        'Daily Notifications',
+        channelDescription: 'Daily random reminder',
+        importance: Importance.max,
+        priority: Priority.high,
+        ticker: 'ticker',
+      );
+
+      const DarwinNotificationDetails iosPlatformChannelSpecifics =
+      DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
+
+      const NotificationDetails platformChannelSpecifics = NotificationDetails(
+        android: androidPlatformChannelSpecifics,
+        iOS: iosPlatformChannelSpecifics,
+      );
+
+      // Use periodicallyShow for a simple daily repeat.
+      // If you need precise time-of-day scheduling, use the timezone package + zonedSchedule.
+      await flutterLocalNotificationsPlugin.periodicallyShow(
+        0,
+        'غرس الجنة',
+        notificationMessages[DateTime.now().second % notificationMessages.length],
+        RepeatInterval.daily,
+        platformChannelSpecifics,
+        androidAllowWhileIdle: false,
+      );
+      print('iOS daily periodic notification scheduled with periodicallyShow');
+    } catch (e) {
+      print('scheduleDailyNotificationsForIOS error: $e');
+    }
+  }
 }

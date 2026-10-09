@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Garthapp</string>
+	<string>غرس</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -46,12 +46,16 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>background-processing</string>
-		<string>background-fetch</string>
-	</array>
-	<key>NSUserNotificationsUsageDescription</key>
-	<string>This app needs notification permission to send you daily reminders for dhikr (remembrance of Allah).</string>
+        <key>NSUserNotificationsUsageDescription</key>
+        <string>This app needs notification permission to send you daily reminders for dhikr (remembrance of Allah).</string>
+        <key>UIBackgroundModes</key>
+        <array>
+            <string>background-fetch</string>
+        </array>
+        <key>BGTaskSchedulerPermittedIdentifiers</key>
+        <array>
+            <string>com.garthapp.notification</string>
+        </array>
+
 </dict>
 </plist>
