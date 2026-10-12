@@ -1,9 +1,20 @@
 import 'dart:io';
 import 'dart:math';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 
+import 'home/home_screen.dart';
+import 'PlantingFormScreen.dart';
+
 const String dailyNotificationTask = "dailyNotificationTask";
+
+/// Attached to [MaterialApp] so a notification tap can navigate even when
+/// there is no [BuildContext] available (foreground/background taps are
+/// delivered straight to this service, not through a widget).
+final GlobalKey<NavigatorState> notificationNavigatorKey =
+    GlobalKey<NavigatorState>();
 
 final List<String> notificationMessages = [
   "نخلة تنتظرك في الجنة! استمر بذكر الله واغرس المزيد مع غرس الجنة.",
@@ -33,7 +44,7 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 Future<void> initializeNotifications() async {
   try {
     const AndroidInitializationSettings initializationSettingsAndroid =
-    AndroidInitializationSettings('@mipmap/ic_launcher');
+    AndroidInitializationSettings('@drawable/ic_stat_notification');
 
     const DarwinInitializationSettings initializationSettingsIOS =
     DarwinInitializationSettings(
@@ -47,11 +58,40 @@ Future<void> initializeNotifications() async {
       iOS: initializationSettingsIOS,
     );
 
-    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+    await flutterLocalNotificationsPlugin.initialize(
+      initializationSettings,
+      onDidReceiveNotificationResponse: _onNotificationTapped,
+    );
   } catch (e) {
     // handle error (plugin not available in background, etc.)
     print('initializeNotifications error: $e');
   }
+}
+
+/// Called when the user taps a notification while the app is in the
+/// foreground or background (not freshly launched from terminated state —
+/// that case is covered by [SplashWrapper], which already lands on the
+/// same screen this picks).
+Future<void> _onNotificationTapped(NotificationResponse response) async {
+  final navigator = notificationNavigatorKey.currentState;
+  if (navigator == null) return;
+
+  final prefs = await SharedPreferences.getInstance();
+  final isFormCompleted = prefs.getBool('isFormCompleted') ?? false;
+
+  // Defer to the next frame: tearing down the whole route stack (which may
+  // include screens with animated charts) synchronously, mid-build, is what
+  // triggers "A disposed RenderObject was mutated" when an entrance
+  // animation is still in flight on the screen being removed.
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    navigator.pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (_) =>
+            isFormCompleted ? const HomeScreen() : const PlantingFormScreen(),
+      ),
+      (route) => false,
+    );
+  });
 }
 
 

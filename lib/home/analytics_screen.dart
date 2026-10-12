@@ -202,6 +202,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                             const DataLabelSettings(isVisible: false),
                         color: Colors.green,
                         width: 2,
+                        // Disabled: this screen's BlocBuilder can rebuild
+                        // (or the whole route can be torn down, e.g. by
+                        // notification-tap navigation) while the entrance
+                        // animation is still running, which crashes with
+                        // "A disposed RenderObject was mutated" inside
+                        // syncfusion_flutter_charts.
+                        animationDuration: 0,
                       )
                     ],
                   ),

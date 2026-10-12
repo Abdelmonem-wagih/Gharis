@@ -8,6 +8,7 @@ import 'package:gana/home/widget/app_bar_widget.dart';
 import 'package:gana/home/widget/app_widget.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:in_app_review/in_app_review.dart';
+import 'package:workmanager/workmanager.dart';
 import '../core/unit/color/colors.dart';
 import '../notification_service.dart';
 import 'analytics_screen.dart';
@@ -23,13 +24,20 @@ class SettingsScreen extends StatelessWidget {
       print('Requesting notifications permission...');
       if (Platform.isIOS) {
         await requestIOSPermissions();
-      }else{
+        await scheduleDailyNotificationsForIOS();
+      } else {
         await requestNotificationsPermission();
+        await scheduleDailyNotificationTask();
       }
     } else {
       print('Cancelling all notifications...');
       // Cancel all notifications
       await cancelAllNotifications();
+      if (Platform.isAndroid) {
+        // Also stop the recurring Workmanager task, otherwise it fires again
+        // within 12h and silently re-enables notifications.
+        await Workmanager().cancelByUniqueName("1");
+      }
     }
     context.read<SwitchCubit>().toggleNotifications();
   }

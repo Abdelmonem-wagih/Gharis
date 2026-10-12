@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:gana/core/unit/color/colors.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import 'package:syncfusion_flutter_charts/sparkcharts.dart';
 
 class StatisticCardWithChart extends StatelessWidget {
@@ -66,7 +65,7 @@ class StatisticCardWithChart extends StatelessWidget {
                 children: [
 
                   Icon(
-                    isPositive ? LucideIcons.arrowUp : LucideIcons.arrowDown,
+                    isPositive ? Icons.arrow_upward : Icons.arrow_downward,
                     color: isPositive ? Colors.green : Colors.red,
                     size: 14,
                   ),

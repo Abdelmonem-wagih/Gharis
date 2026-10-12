@@ -1,9 +1,8 @@
 import 'dart:io';
-import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:gana/splash_screen.dart';
 import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'package:path_provider/path_provider.dart';
@@ -14,7 +13,6 @@ import 'notification_service.dart';
 
 import 'Form/presentation/bloc/user_form_cubit.dart';
 import 'Form/presentation/pages/form_screen.dart';
-import 'core/service/notifcation.dart';
 import 'home/home_screen.dart';
 import 'home/logic/diagram/chart_cubit.dart';
 import 'home/logic/expand/expand.dart';
@@ -47,7 +45,7 @@ void main() async {
   if (Platform.isAndroid) {
     Workmanager().initialize(
       callbackDispatcher,
-      isInDebugMode: true, // false in prod
+      isInDebugMode: kDebugMode,
     );
 
     // register periodic task only on Android
@@ -57,7 +55,6 @@ void main() async {
     // You can schedule daily local notifications here. Example:
     await scheduleDailyNotificationsForIOS(); // implement in notification_service.dart
   }
-  await scheduleDailyNotificationTask();
   final prefs = await SharedPreferences.getInstance();
   final isFormCompleted = prefs.getBool('isFormCompleted') ?? false;
 
@@ -96,6 +93,7 @@ class MyApp extends StatelessWidget {
       child: BlocBuilder<SwitchCubit, SwitchState>(
         builder: (context, state) {
           return MaterialApp(
+            navigatorKey: notificationNavigatorKey,
             title: 'غرسك',
             theme: ThemeData(
               colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
